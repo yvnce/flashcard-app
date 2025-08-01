@@ -1,0 +1,403 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modern Flashcard Tool</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --page-bg: #F4F4F9;
+            --main-container-bg: #FFFFFF;
+            --primary-text: #333333;
+            --primary-accent: #4A90E2;
+            --primary-accent-hover: #357ABD;
+            --delete-btn: #D0021B;
+            --delete-btn-hover: #A80015;
+            --light-gray: #F7F7FA;
+            --border-color: #E0E0E0;
+        }
+
+        body {
+            font-family: 'Poppins', sans-serif;
+            background-color: var(--page-bg);
+            color: var(--primary-text);
+            margin: 0;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background-color: var(--main-container-bg);
+            padding: 2.5rem;
+            border-radius: 16px;
+            box-shadow: 0 8px 24px rgba(0, 0, 0, 0.08);
+        }
+
+        h1 {
+            text-align: center;
+            margin-bottom: 2.5rem;
+            font-weight: 700;
+        }
+
+        .form-container {
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            margin-bottom: 2.5rem;
+        }
+
+        .form-container input {
+            padding: 1rem;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            font-size: 1rem;
+            font-family: 'Poppins', sans-serif;
+            transition: box-shadow 0.3s, border-color 0.3s;
+        }
+
+        .form-container input:focus {
+            outline: none;
+            border-color: var(--primary-accent);
+            box-shadow: 0 0 0 3px rgba(74, 144, 226, 0.2);
+        }
+
+        .btn {
+            padding: 1rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: 500;
+            font-family: 'Poppins', sans-serif;
+            transition: background-color 0.3s, transform 0.2s;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+        }
+
+        .btn-primary {
+            background-color: var(--primary-accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background-color: var(--primary-accent-hover);
+        }
+
+        #flashcard-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 2rem;
+        }
+
+        #flashcard-table th, #flashcard-table td {
+            padding: 1rem;
+            text-align: left;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        #flashcard-table th {
+            background-color: var(--light-gray);
+            font-weight: 500;
+        }
+
+        #flashcard-table tbody tr:nth-child(even) {
+            background-color: var(--light-gray);
+        }
+        
+        #flashcard-table tbody tr:hover {
+            background-color: #f0f0f5;
+        }
+
+        .action-buttons button {
+            background: none;
+            border: none;
+            cursor: pointer;
+            font-size: 1.25rem;
+            margin-right: 0.75rem;
+            transition: transform 0.2s;
+        }
+        
+        .action-buttons button:hover {
+             transform: scale(1.2);
+        }
+        
+        .action-buttons .edit-btn { color: var(--primary-accent); }
+        .action-buttons .delete-btn { color: var(--delete-btn); }
+        
+        .utilities {
+            display: flex;
+            justify-content: flex-end;
+            gap: 0.75rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        
+        #import-btn-label {
+             background-color: #6c757d;
+             color: white;
+        }
+        
+        #import-btn-label:hover {
+             background-color: #5a6268;
+        }
+        
+        #import-input {
+            display: none;
+        }
+
+        /* Print Styles */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+
+            #printable-cards, #printable-cards * {
+                visibility: visible;
+            }
+
+            #printable-cards {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                display: flex;
+                flex-wrap: wrap;
+                gap: 0; 
+            }
+
+            .printable-card {
+                width: 5in;
+                height: 3in;
+                border: 1px solid #000;
+                display: flex;
+                page-break-inside: avoid;
+                overflow: hidden;
+            }
+            
+            .printable-card .front,
+            .printable-card .back {
+                width: 2.5in;
+                height: 100%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                text-align: center;
+                padding: 10px;
+                box-sizing: border-box;
+                font-size: 14pt;
+                word-wrap: break-word;
+            }
+
+            .printable-card .front {
+                border-right: 1px dashed #000;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <h1>Modern Flashcard Maker</h1>
+        <p>Your cards are saved automatically to this browser as you work. Use the Export/Import buttons to create backups or move cards between devices.</p>
+        <div class="form-container">
+            <input type="text" id="front-input" placeholder="FRONT of card">
+            <input type="text" id="back-input" placeholder="BACK of card">
+            <button id="add-card-btn" class="btn btn-primary">Add Card</button>
+        </div>
+
+        <table id="flashcard-table">
+            <thead>
+                <tr>
+                    <th>FRONT</th>
+                    <th>BACK</th>
+                    <th>ACTIONS</th>
+                </tr>
+            </thead>
+            <tbody>
+                <!-- Flashcard rows will be inserted here by JavaScript -->
+            </tbody>
+        </table>
+
+        <div class="utilities">
+             <input type="file" id="import-input" accept=".json">
+             <label for="import-input" id="import-btn-label" class="btn">Import Cards</label>
+             <button id="export-btn" class="btn">Export Cards</button>
+             <button id="print-btn" class="btn btn-primary">Print All Cards</button>
+        </div>
+    </div>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const frontInput = document.getElementById('front-input');
+            const backInput = document.getElementById('back-input');
+            const addCardBtn = document.getElementById('add-card-btn');
+            const flashcardTableBody = document.querySelector('#flashcard-table tbody');
+            
+            const printBtn = document.getElementById('print-btn');
+            const exportBtn = document.getElementById('export-btn');
+            const importInput = document.getElementById('import-input');
+
+            let flashcards = JSON.parse(localStorage.getItem('flashcards')) || [];
+            let editIndex = null;
+
+            const saveToLocalStorage = () => {
+                localStorage.setItem('flashcards', JSON.stringify(flashcards));
+            };
+
+            const renderFlashcards = () => {
+                flashcardTableBody.innerHTML = '';
+                if(flashcards.length === 0) {
+                     flashcardTableBody.innerHTML = '<tr><td colspan="3" style="text-align:center;">No flashcards yet. Add one above!</td></tr>';
+                } else {
+                    flashcards.forEach((card, index) => {
+                        const row = document.createElement('tr');
+                        row.innerHTML = `
+                            <td>${card.front}</td>
+                            <td>${card.back}</td>
+                            <td class="action-buttons">
+                                <button class="edit-btn" onclick="editCard(${index})" title="Edit">✏️</button>
+                                <button class="delete-btn" onclick="deleteCard(${index})" title="Delete">🗑️</button>
+                            </td>
+                        `;
+                        flashcardTableBody.appendChild(row);
+                    });
+                }
+            };
+            
+            const addOrUpdateCard = () => {
+                const front = frontInput.value.trim();
+                const back = backInput.value.trim();
+
+                if (!front || !back) {
+                    alert('Both FRONT and BACK fields are required.');
+                    return;
+                }
+                
+                if (editIndex !== null) {
+                    flashcards[editIndex] = { front, back };
+                    addCardBtn.textContent = 'Add Card';
+                    editIndex = null;
+                } else {
+                    flashcards.push({ front, back });
+                }
+
+                frontInput.value = '';
+                backInput.value = '';
+                saveToLocalStorage();
+                renderFlashcards();
+            };
+
+            window.editCard = (index) => {
+                editIndex = index;
+                const card = flashcards[index];
+                frontInput.value = card.front;
+                backInput.value = card.back;
+                addCardBtn.textContent = 'Update Card';
+                frontInput.focus();
+            };
+
+            window.deleteCard = (index) => {
+                if (confirm('Are you sure you want to delete this card? This action cannot be undone.')) {
+                    flashcards.splice(index, 1);
+                    saveToLocalStorage();
+                    renderFlashcards();
+                }
+            };
+            
+            const prepareForPrint = () => {
+                if(flashcards.length === 0) {
+                    alert("There are no cards to print!");
+                    return;
+                }
+                
+                let printableContainer = document.getElementById('printable-cards');
+                if (!printableContainer) {
+                    printableContainer = document.createElement('div');
+                    printableContainer.id = 'printable-cards';
+                    document.body.appendChild(printableContainer);
+                }
+                
+                printableContainer.innerHTML = '';
+                flashcards.forEach(card => {
+                    const cardElement = document.createElement('div');
+                    cardElement.classList.add('printable-card');
+                    cardElement.innerHTML = `
+                        <div class="front">${card.front}</div>
+                        <div class="back">${card.back}</div>
+                    `;
+                    printableContainer.appendChild(cardElement);
+                });
+                
+                window.print();
+            };
+
+            const exportCards = () => {
+                if(flashcards.length === 0) {
+                    alert("There are no cards to export!");
+                    return;
+                }
+
+                const dataStr = JSON.stringify(flashcards, null, 2);
+                const blob = new Blob([dataStr], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'flashcards.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            };
+            
+            const importCards = (event) => {
+                 const file = event.target.files[0];
+                 if(!file) return;
+
+                 const reader = new FileReader();
+                 reader.onload = function(e) {
+                     try {
+                        const importedCards = JSON.parse(e.target.result);
+                        if (!Array.isArray(importedCards) || !importedCards.every(c => c.front && c.back)) {
+                           throw new Error("Invalid file format.");
+                        }
+
+                        if(confirm("Do you want to MERGE the imported cards with your current set? Duplicates will be ignored.")) {
+                            const existingCardStrings = flashcards.map(c => JSON.stringify(c));
+                            let newCardsAdded = 0;
+
+                            importedCards.forEach(newCard => {
+                                if(!existingCardStrings.includes(JSON.stringify(newCard))) {
+                                    flashcards.push(newCard);
+                                    newCardsAdded++;
+                                }
+                            });
+                            
+                            saveToLocalStorage();
+                            renderFlashcards();
+                            alert(`${newCardsAdded} new card(s) were successfully imported and merged.`);
+                        }
+                     } catch (error) {
+                         alert("Error: Could not import cards. Please ensure the file is a valid JSON exported from this tool.");
+                     } finally {
+                         // Reset the input so the same file can be loaded again
+                         importInput.value = "";
+                     }
+                 };
+                 reader.readAsText(file);
+            };
+
+            // Event Listeners
+            addCardBtn.addEventListener('click', addOrUpdateCard);
+            printBtn.addEventListener('click', prepareForPrint);
+            exportBtn.addEventListener('click', exportCards);
+            importInput.addEventListener('change', importCards);
+
+            renderFlashcards();
+        });
+    </script>
+</body>
+</html>
